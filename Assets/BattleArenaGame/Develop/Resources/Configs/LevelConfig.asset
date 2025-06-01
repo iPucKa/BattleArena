@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67cf86f926aeb874ead5c2eb8a2d2e5d, type: 3}
+  m_Name: LevelConfig
+  m_EditorClassIdentifier: 
+  <WinRule>k__BackingField: 0
+  <DefeatRule>k__BackingField: 0
+  <EnemyConfig>k__BackingField: {fileID: 11400000, guid: 2d7b6eafefe8f094690cdc3c55b196d2,
+    type: 2}
+  <EnemiesCount>k__BackingField: 1
+  <CooldownSpawnTime>k__BackingField: 3
+  <EnemiesSpawnPoints>k__BackingField:
+  - {x: 0, y: 0.5, z: -10}
+  - {x: -10, y: 0.5, z: 0}
+  - {x: 0, y: 0.5, z: 10}
+  - {x: 10, y: 0.5, z: 0}
+  <MainHeroStartPosition>k__BackingField: {x: 0, y: 0, z: -2.72}
+  <EnvironmentSceneName>k__BackingField: Environment1
