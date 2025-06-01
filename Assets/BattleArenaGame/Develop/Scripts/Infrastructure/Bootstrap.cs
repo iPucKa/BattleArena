@@ -47,8 +47,11 @@ public class Bootstrap : MonoBehaviour
 		//симул€ци€ какой-то инициализации и тп.
 		yield return new WaitForSeconds(1.5f);
 
-		//подготовка игры
-		yield return _gameplayCircle.Prepare();
+		//подготовка сцены
+		yield return _gameplayCircle.PrepareScene();
+
+		//загрузка »грока
+		yield return _gameplayCircle.PrepareMainHero();
 
 		//_loadingScreen.Hide();
 

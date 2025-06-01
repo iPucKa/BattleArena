@@ -33,8 +33,6 @@ public class ControllersFactory
 
 	public EnemyIdleController CreateEnemyIdleController(Enemy enemy)
 	{
-		Debug.Log("Установили контроллер");
-
 		return new EnemyIdleController(enemy);
 	}
 }

@@ -34,9 +34,14 @@ public class GameplayCircle : IDisposable
 		_context = context;
 	}
 
-	public IEnumerator Prepare()
+	public IEnumerator PrepareScene()
 	{		
-		yield return SceneManager.LoadSceneAsync(_levelConfig.EnvironmentSceneName, LoadSceneMode.Additive);
+		yield return SceneManager.LoadSceneAsync(_levelConfig.EnvironmentSceneName, LoadSceneMode.Additive);		
+	}
+
+	public IEnumerator PrepareMainHero()
+	{
+		yield return new WaitForSeconds(0.1f);
 
 		_character = _mainHeroFactory.Create(_mainHeroConfig, _levelConfig.MainHeroStartPosition);
 	}
@@ -80,6 +85,7 @@ public class GameplayCircle : IDisposable
 	{
 		OnGameModeEnded();
 		Debug.Log("Defeat");
+		_context.StartCoroutine(PrepareMainHero());
 		_context.StartCoroutine(Launch());
 	}
 

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: LevelConfig
   m_EditorClassIdentifier: 
   <WinRule>k__BackingField: 0
-  <DefeatRule>k__BackingField: 0
+  <DefeatRule>k__BackingField: 1
   <EnemyConfig>k__BackingField: {fileID: 11400000, guid: 2d7b6eafefe8f094690cdc3c55b196d2,
     type: 2}
   <EnemiesCount>k__BackingField: 1

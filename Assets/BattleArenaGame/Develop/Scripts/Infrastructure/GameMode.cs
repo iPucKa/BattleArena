@@ -99,7 +99,7 @@ public class GameMode : IDisposable
 				return _killedCount >= KilledEnemiesCountToWin;
 				
 			case GameWinRules.CurrentTimeAlive:
-				return _currentTimeToWin >= TimeToWin;
+				return _currentTimeToWin >= TimeToWin && _mainCharacterKilled == false;
 
 			default:
 				return false;
@@ -133,9 +133,7 @@ public class GameMode : IDisposable
 				_spawnedEnemies.Add(enemy);
 
 				enemy.Killed += OnEnemyKilled;
-			}
-
-			//_spawnedEnemies = _enemySpawner.Spawn(_levelConfig.EnemyConfig,	GetRandomSpawnPoint());			
+			}			
 
 			_time = 0;
 		}
@@ -164,6 +162,8 @@ public class GameMode : IDisposable
 			bullet.Destroy();
 		
 		_bullets.Clear();
+
+		_character.Destroy();
 	}
 
 	private void ProcessDefeat()
