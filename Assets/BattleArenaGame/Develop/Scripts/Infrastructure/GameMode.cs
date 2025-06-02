@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
-using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
 
 public class GameMode
@@ -9,7 +7,7 @@ public class GameMode
 	public event Action Win;
 	public event Action Defeat;
 
-	private const float TimeToWin = 60;
+	private const float TimeToWin = 15;
 	private const int KilledEnemiesCountToWin = 10;
 	private const int AliveEnemiesCountToDefeat = 10;
 
@@ -18,8 +16,9 @@ public class GameMode
 	private EnemySpawner _enemySpawner;
 
 	private bool _isRunning;
-	private List<Enemy> _spawnedEnemies = new List<Enemy>();
-	private List<Bullet> _bullets = new List<Bullet>();
+
+	private ItemList<Enemy> _spawnedEnemies = new();
+	private ItemList<Bullet> _bullets = new();
 
 	private float _time;
 	private int _killedCount;
@@ -157,16 +156,17 @@ public class GameMode
 	{
 		_isRunning = false;
 
-		foreach (Enemy enemy in _spawnedEnemies)
+		for (int i = 0; i < _spawnedEnemies.Count; i++)
 		{
-			enemy.Destroyed -= OnEnemyDestroyed;
-			enemy.Destroy();
+			_spawnedEnemies.GetBy(i).Destroyed -= OnEnemyDestroyed;
+			_spawnedEnemies.GetBy(i).Destroy();
 		}
 
-		_spawnedEnemies.Clear();		
+		_spawnedEnemies.Clear();
 
-		foreach(Bullet bullet in _bullets)
-			bullet.Destroy();
+
+		for (int i = 0; i < _bullets.Count; i++)		
+			_bullets.GetBy(i).Destroy();		
 		
 		_bullets.Clear();
 

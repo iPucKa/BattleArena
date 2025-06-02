@@ -1,11 +1,8 @@
-using System;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class Enemy : MonoDestroyable, IMovable, ICanSpawn, IKillable
+public class Enemy : MonoDestroyable, IMovable, ICanSpawn
 {
-	public event Action Killed;
-
 	private NavMeshAgent _agent;
 	private AgentMover _mover;
 	private TransformDirectionalRotator _rotator;
@@ -65,13 +62,10 @@ public class Enemy : MonoDestroyable, IMovable, ICanSpawn, IKillable
 		return false;
 	}
 
-
 	public bool InSpawnProcess(out float elapsedTime) => _spawnTimer.InProcess(out elapsedTime);
 
 	public void Kill()
 	{
-		Debug.Log("Враг убит");
-
 		Destroy();
 	}
 }
