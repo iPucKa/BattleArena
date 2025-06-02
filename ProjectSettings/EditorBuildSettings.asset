@@ -11,4 +11,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/BattleArenaGame/Environment1.unity
     guid: 7bd056b9402e3114688f490879f39ca3
+  - enabled: 1
+    path: Assets/BattleArenaGame/WinScene.unity
+    guid: 2bf8f070a84415a4d8e0f6a0703c5e61
   m_configObjects: {}

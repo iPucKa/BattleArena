@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class Enemy : MonoDestroyable, IMovable, ICanSpawn, IDamageable
+public class Enemy : MonoDestroyable, IMovable, ICanSpawn, IKillable
 {
 	public event Action Killed;
 
@@ -68,10 +68,10 @@ public class Enemy : MonoDestroyable, IMovable, ICanSpawn, IDamageable
 
 	public bool InSpawnProcess(out float elapsedTime) => _spawnTimer.InProcess(out elapsedTime);
 
-	public void TakeDamage()
+	public void Kill()
 	{
 		Debug.Log("Враг убит");
 
-		Killed?.Invoke();
+		Destroy();
 	}
 }

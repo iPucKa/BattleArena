@@ -16,8 +16,6 @@ public class AgentMover
 
 	public void SetDestination(Vector3 position)
 	{
-		Debug.Log("œŒ«»÷»ﬂ = " + position);
-
 		_agent.SetDestination(position);
 	}
 

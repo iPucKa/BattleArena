@@ -1,8 +1,7 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class Character : MonoDestroyable, IDirectionalMovable, IDirectionalRotatable, IDamageable, ICanShoot
+public class Character : MonoDestroyable, IDirectionalMovable, IDirectionalRotatable, IKillable, ICanShoot
 {
 	public event Action Killed;
 
@@ -40,7 +39,7 @@ public class Character : MonoDestroyable, IDirectionalMovable, IDirectionalRotat
 
 	public void SetRotationDirection(Vector3 inputDirection) => _rotator.SetInputDirection(inputDirection);
 
-	public void TakeDamage()
+	public void Kill()
 	{
 		Debug.Log("Игрок убит");
 

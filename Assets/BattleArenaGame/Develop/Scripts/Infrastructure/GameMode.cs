@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
 
-public class GameMode : IDisposable
+public class GameMode
 {
 	public event Action Win;
 	public event Action Defeat;
@@ -36,19 +37,9 @@ public class GameMode : IDisposable
 		_character = character;
 		_enemySpawner = enemySpawner;
 
-		//_enemySpawner.EnemyKilled += OnEnemyKilled;
 		_character.Killed += OnMainHeroKilled;
-	}
-
-	private void OnMainHeroKilled()
-	{
-		_mainCharacterKilled = true;
-	}
-
-	private void OnEnemyKilled()
-	{
-		_killedCount++;
-	}
+		_character.Destroyed += OnMainHeroDestroyed;
+	}	
 
 	public void Start()
 	{
@@ -86,6 +77,22 @@ public class GameMode : IDisposable
 		}
 	}
 
+	private void OnMainHeroDestroyed(MonoDestroyable destroyable)
+	{
+		_mainCharacterKilled = false;
+	}
+
+	private void OnMainHeroKilled()
+	{
+		_mainCharacterKilled = true;
+	}
+
+	private void OnEnemyDestroyed(MonoDestroyable enemy)
+	{
+		_killedCount++;
+		_spawnedEnemies.Remove(enemy as Enemy);
+	}
+
 	private void ProcessCountingWinTime(float deltaTime)
 	{
 		_currentTimeToWin += deltaTime;
@@ -111,7 +118,7 @@ public class GameMode : IDisposable
 		switch (_levelConfig.DefeatRule)
 		{
 			case GameDefeatRules.MaxSpawnedEnemies:
-				return (_spawnedEnemies.Count - _killedCount) >= AliveEnemiesCountToDefeat;
+				return _spawnedEnemies.Count >= AliveEnemiesCountToDefeat || _mainCharacterKilled;
 
 			case GameDefeatRules.HeroIsDead:
 				return _mainCharacterKilled;
@@ -132,12 +139,12 @@ public class GameMode : IDisposable
 				Enemy enemy = _enemySpawner.Spawn(_levelConfig.EnemyConfig, GetRandomSpawnPoint());
 				_spawnedEnemies.Add(enemy);
 
-				enemy.Killed += OnEnemyKilled;
+				enemy.Destroyed += OnEnemyDestroyed;
 			}			
 
 			_time = 0;
 		}
-	}
+	}	
 
 	private Vector3 GetRandomSpawnPoint()
 	{
@@ -152,7 +159,7 @@ public class GameMode : IDisposable
 
 		foreach (Enemy enemy in _spawnedEnemies)
 		{
-			enemy.Killed -= OnEnemyKilled;
+			enemy.Destroyed -= OnEnemyDestroyed;
 			enemy.Destroy();
 		}
 
@@ -163,6 +170,8 @@ public class GameMode : IDisposable
 		
 		_bullets.Clear();
 
+		_character.Killed -= OnMainHeroKilled;
+		_character.Destroyed -= OnMainHeroDestroyed;
 		_character.Destroy();
 	}
 
@@ -176,11 +185,5 @@ public class GameMode : IDisposable
 	{
 		ProcessEndGame();
 		Win?.Invoke();
-	}
-
-	public void Dispose()
-	{
-		//_enemySpawner.EnemyKilled -= OnEnemyKilled;
-		_character.Killed -= OnMainHeroKilled;
 	}
 }
