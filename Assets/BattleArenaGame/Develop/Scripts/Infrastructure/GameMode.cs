@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -15,10 +16,16 @@ public class GameMode
 	private Character _character;
 	private EnemySpawner _enemySpawner;
 
+	private RuleService _ruleWinService;
+	private RuleService _ruleDefeatService;
+
 	private bool _isRunning;
 
 	private ItemList<Enemy> _spawnedEnemies = new();
 	private ItemList<Bullet> _bullets = new();
+
+	private List<GameSettings> _winSettings = new();
+	private List<GameSettings> _defeatSettings = new();
 
 	private float _time;
 	private int _killedCount;
@@ -36,9 +43,62 @@ public class GameMode
 		_character = character;
 		_enemySpawner = enemySpawner;
 
+		_winSettings = _levelConfig.WinSettings;
+		_defeatSettings = _levelConfig.DefeatSettings;
+		
+		_ruleWinService = new RuleService();
+		_ruleDefeatService = new RuleService();
+
+		foreach (GameSettings settings in _winSettings)
+		{
+			switch (settings.Rule)
+			{
+				case GameRules.EnemiesKilledCount:
+					_ruleWinService.AddTo(settings.Rule, () => _killedCount >= KilledEnemiesCountToWin);
+					break;
+
+				case GameRules.MaxLifeTime:
+					_ruleWinService.AddTo(settings.Rule, () => _currentTimeToWin >= TimeToWin && _mainCharacterKilled == false);
+					break;
+
+				default:
+					throw new ArgumentOutOfRangeException($"Unknown rule condition");
+			}			
+		}		
+
+		foreach (GameSettings settings in _defeatSettings)
+		{
+			switch (settings.Rule)
+			{
+				case GameRules.MaxSpawnedEnemies:
+					_ruleDefeatService.AddTo(settings.Rule, () => _spawnedEnemies.Count >= AliveEnemiesCountToDefeat || _mainCharacterKilled);
+					break;
+
+				case GameRules.HeroIsDead:
+					_ruleDefeatService.AddTo(settings.Rule, () => _mainCharacterKilled);
+					break;
+
+				default:
+					throw new ArgumentOutOfRangeException($"Unknown rule condition");
+			}
+		}
+
+		_ruleWinService.IsDone += OnWinConditionCompleted;
+		_ruleDefeatService.IsDone += OnDefeatConditionCompleted;
+
 		_character.Killed += OnMainHeroKilled;
 		_character.Destroyed += OnMainHeroDestroyed;
 	}	
+
+	private void OnDefeatConditionCompleted()
+	{
+		ProcessDefeat();
+	}
+
+	private void OnWinConditionCompleted()
+	{
+		ProcessWin();
+	}
 
 	public void Start()
 	{
@@ -52,27 +112,18 @@ public class GameMode
 		if (_isRunning == false)
 			return;
 
+		GenerateEnemy(deltaTime);
+
+		ProcessCountingWinTime(deltaTime);
+
+		_ruleWinService.Update(Time.deltaTime);
+		_ruleDefeatService.Update(Time.deltaTime);
+
 		if (Input.GetKeyDown(KeyCode.Space))
 		{
 			_character.Shoot(out Bullet bullet);
 
 			_bullets.Add(bullet);
-		}
-
-		GenerateEnemy(deltaTime);
-
-		ProcessCountingWinTime(deltaTime);
-
-		if (DefeatConditionCompleted())
-		{
-			ProcessDefeat();
-			return;
-		}
-
-		if (WinConditionCompleted())
-		{
-			ProcessWin();
-			return;
 		}
 	}
 
@@ -95,36 +146,6 @@ public class GameMode
 	private void ProcessCountingWinTime(float deltaTime)
 	{
 		_currentTimeToWin += deltaTime;
-	}	
-
-	private bool WinConditionCompleted()
-	{
-		switch (_levelConfig.WinRule)
-		{
-			case GameWinRules.EnemiesKilledCount:
-				return _killedCount >= KilledEnemiesCountToWin;
-				
-			case GameWinRules.CurrentTimeAlive:
-				return _currentTimeToWin >= TimeToWin && _mainCharacterKilled == false;
-
-			default:
-				return false;
-		}
-	}
-
-	private bool DefeatConditionCompleted() 
-	{
-		switch (_levelConfig.DefeatRule)
-		{
-			case GameDefeatRules.MaxSpawnedEnemies:
-				return _spawnedEnemies.Count >= AliveEnemiesCountToDefeat || _mainCharacterKilled;
-
-			case GameDefeatRules.HeroIsDead:
-				return _mainCharacterKilled;
-
-			default:
-				return false;
-		}
 	}
 
 	private void GenerateEnemy(float deltaTime)
@@ -134,16 +155,16 @@ public class GameMode
 		if (_time >= _levelConfig.CooldownSpawnTime)
 		{
 			for (int i = 0; i < _levelConfig.EnemiesCount; i++)
-			{ 
+			{
 				Enemy enemy = _enemySpawner.Spawn(_levelConfig.EnemyConfig, GetRandomSpawnPoint());
 				_spawnedEnemies.Add(enemy);
 
 				enemy.Destroyed += OnEnemyDestroyed;
-			}			
+			}
 
 			_time = 0;
 		}
-	}	
+	}
 
 	private Vector3 GetRandomSpawnPoint()
 	{
@@ -156,6 +177,9 @@ public class GameMode
 	{
 		_isRunning = false;
 
+		_ruleWinService.IsDone -= OnWinConditionCompleted;
+		_ruleDefeatService.IsDone -= OnDefeatConditionCompleted;
+
 		for (int i = 0; i < _spawnedEnemies.Count; i++)
 		{
 			_spawnedEnemies.GetBy(i).Destroyed -= OnEnemyDestroyed;
@@ -165,9 +189,9 @@ public class GameMode
 		_spawnedEnemies.Clear();
 
 
-		for (int i = 0; i < _bullets.Count; i++)		
-			_bullets.GetBy(i).Destroy();		
-		
+		for (int i = 0; i < _bullets.Count; i++)
+			_bullets.GetBy(i).Destroy();
+
 		_bullets.Clear();
 
 		_character.Killed -= OnMainHeroKilled;

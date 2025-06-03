@@ -15,6 +15,7 @@ public class GameplayCircle : IDisposable
 	private ConfirmPopup _confirmPopup;
 
 	private EnemySpawner _enemySpawner;
+
 	private GameMode _gameMode;
 	private MonoBehaviour _context;
 

@@ -6,8 +6,10 @@ public class LevelConfig : ScriptableObject
 {
 	//[field: SerializeField] public float DistanceTraveledToWin { get; private set; }
 	//[field: SerializeField] public float TimeToDefeat { get; private set; }
-	[field: SerializeField] public GameWinRules WinRule { get; private set; }
-	[field: SerializeField] public GameDefeatRules DefeatRule { get; private set; }
+
+	[field: SerializeField] public List<GameSettings> WinSettings { get; private set; }
+	[field: SerializeField] public List<GameSettings> DefeatSettings { get; private set; }
+
 	[field: SerializeField] public EnemyConfig EnemyConfig { get; private set; }
 	[field: SerializeField] public int EnemiesCount { get; private set; }
 	[field: SerializeField] public float CooldownSpawnTime { get; private set; }
