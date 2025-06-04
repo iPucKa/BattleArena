@@ -30,4 +30,6 @@ public class ItemList<TItem>
 	}
 
 	public void Clear() => _enemies.Clear();
+
+	//public List<TItem> Items => _enemies;
 }

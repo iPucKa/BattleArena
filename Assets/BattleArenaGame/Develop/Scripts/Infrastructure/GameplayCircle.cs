@@ -11,6 +11,8 @@ public class GameplayCircle : IDisposable
 	private Character _character;
 
 	private LevelConfig _levelConfig;
+	private WinRuleService _winRuleService;
+	private DefeatRuleService _defeatRuleService;
 
 	private ConfirmPopup _confirmPopup;
 
@@ -52,6 +54,10 @@ public class GameplayCircle : IDisposable
 		_confirmPopup.Hide();
 
 		_gameMode = new GameMode(_levelConfig, _character, _enemySpawner);
+		_winRuleService = new WinRuleService(_levelConfig, _character, _gameMode);
+		_defeatRuleService = new DefeatRuleService(_levelConfig, _character, _gameMode);
+
+		_gameMode.SetRule(_winRuleService, _defeatRuleService);
 
 		_gameMode.Win += OnGameModeWin;
 		_gameMode.Defeat += OnGameModeDefeat;

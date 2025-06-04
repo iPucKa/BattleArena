@@ -4,17 +4,11 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Configs/Gameplay/LevelConfig", fileName = "LevelConfig")]
 public class LevelConfig : ScriptableObject
 {
-	//[field: SerializeField] public float DistanceTraveledToWin { get; private set; }
-	//[field: SerializeField] public float TimeToDefeat { get; private set; }
-
-	[field: SerializeField] public List<GameSettings> WinSettings { get; private set; }
-	[field: SerializeField] public List<GameSettings> DefeatSettings { get; private set; }
-
+	[field: SerializeField] public GameSettings WinRule { get; private set; }
+	[field: SerializeField] public GameSettings DefeatRule { get; private set; }
 	[field: SerializeField] public EnemyConfig EnemyConfig { get; private set; }
 	[field: SerializeField] public int EnemiesCount { get; private set; }
 	[field: SerializeField] public float CooldownSpawnTime { get; private set; }
-
-	//[field: SerializeField] public float EnemiesSpawnRange { get; private set; }
 	[field: SerializeField] public List<Vector3> EnemiesSpawnPoints { get; private set; }
 	[field: SerializeField] public Vector3 MainHeroStartPosition { get; private set; }
 	[field: SerializeField] public string EnvironmentSceneName { get; private set; }

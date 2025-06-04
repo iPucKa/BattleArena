@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -8,31 +7,22 @@ public class GameMode
 	public event Action Win;
 	public event Action Defeat;
 
-	private const float TimeToWin = 15;
-	private const int KilledEnemiesCountToWin = 10;
-	private const int AliveEnemiesCountToDefeat = 10;
-
 	private LevelConfig _levelConfig;
 	private Character _character;
 	private EnemySpawner _enemySpawner;
 
-	private RuleService _ruleWinService;
-	private RuleService _ruleDefeatService;
-
-	private bool _isRunning;
+	private WinRuleService _ruleWinService;
+	private DefeatRuleService _ruleDefeatService;
 
 	private ItemList<Enemy> _spawnedEnemies = new();
 	private ItemList<Bullet> _bullets = new();
 
-	private List<GameSettings> _winSettings = new();
-	private List<GameSettings> _defeatSettings = new();
+	private ReactiveVariable<int> _aliveEnemyCount;
+	private ReactiveVariable<int> _killedEnemyCount;
 
+	private bool _isRunning;
 	private float _time;
-	private int _killedCount;
-
-	private bool _mainCharacterKilled;
-
-	private float _currentTimeToWin;
+	private int _killedCount;	
 
 	public GameMode(
 		LevelConfig levelConfig,
@@ -43,62 +33,13 @@ public class GameMode
 		_character = character;
 		_enemySpawner = enemySpawner;
 
-		_winSettings = _levelConfig.WinSettings;
-		_defeatSettings = _levelConfig.DefeatSettings;
-		
-		_ruleWinService = new RuleService();
-		_ruleDefeatService = new RuleService();
-
-		foreach (GameSettings settings in _winSettings)
-		{
-			switch (settings.Rule)
-			{
-				case GameRules.EnemiesKilledCount:
-					_ruleWinService.AddTo(settings.Rule, () => _killedCount >= KilledEnemiesCountToWin);
-					break;
-
-				case GameRules.MaxLifeTime:
-					_ruleWinService.AddTo(settings.Rule, () => _currentTimeToWin >= TimeToWin && _mainCharacterKilled == false);
-					break;
-
-				default:
-					throw new ArgumentOutOfRangeException($"Unknown rule condition");
-			}			
-		}		
-
-		foreach (GameSettings settings in _defeatSettings)
-		{
-			switch (settings.Rule)
-			{
-				case GameRules.MaxSpawnedEnemies:
-					_ruleDefeatService.AddTo(settings.Rule, () => _spawnedEnemies.Count >= AliveEnemiesCountToDefeat || _mainCharacterKilled);
-					break;
-
-				case GameRules.HeroIsDead:
-					_ruleDefeatService.AddTo(settings.Rule, () => _mainCharacterKilled);
-					break;
-
-				default:
-					throw new ArgumentOutOfRangeException($"Unknown rule condition");
-			}
-		}
-
-		_ruleWinService.IsDone += OnWinConditionCompleted;
-		_ruleDefeatService.IsDone += OnDefeatConditionCompleted;
-
-		_character.Killed += OnMainHeroKilled;
-		_character.Destroyed += OnMainHeroDestroyed;
-	}	
-
-	private void OnDefeatConditionCompleted()
-	{
-		ProcessDefeat();
+		_aliveEnemyCount = new ReactiveVariable<int>();
+		_killedEnemyCount = new ReactiveVariable<int>();		
 	}
 
-	private void OnWinConditionCompleted()
-	{
-		ProcessWin();
-	}
+	public IReadOnlyVariable<int> SpawnedEnemyCount => _aliveEnemyCount;
+
+	public IReadOnlyVariable<int> KilledEnemyCount => _killedEnemyCount;	
 
 	public void Start()
 	{
@@ -112,9 +53,7 @@ public class GameMode
 		if (_isRunning == false)
 			return;
 
-		GenerateEnemy(deltaTime);
-
-		ProcessCountingWinTime(deltaTime);
+		GenerateEnemy(deltaTime);		
 
 		_ruleWinService.Update(Time.deltaTime);
 		_ruleDefeatService.Update(Time.deltaTime);
@@ -127,25 +66,32 @@ public class GameMode
 		}
 	}
 
-	private void OnMainHeroDestroyed(MonoDestroyable destroyable)
+	public void SetRule(WinRuleService winService, DefeatRuleService defeatService)
 	{
-		_mainCharacterKilled = false;
+		_ruleWinService = winService;
+		_ruleDefeatService = defeatService;
+
+		_ruleWinService.IsCompleted += OnWinConditionCompleted;
+		_ruleDefeatService.IsCompleted += OnDefeatConditionCompleted;
 	}
 
-	private void OnMainHeroKilled()
+	private void OnDefeatConditionCompleted()
 	{
-		_mainCharacterKilled = true;
+		ProcessDefeat();
+	}
+
+	private void OnWinConditionCompleted()
+	{
+		ProcessWin();
 	}
 
 	private void OnEnemyDestroyed(MonoDestroyable enemy)
 	{
 		_killedCount++;
 		_spawnedEnemies.Remove(enemy as Enemy);
-	}
-
-	private void ProcessCountingWinTime(float deltaTime)
-	{
-		_currentTimeToWin += deltaTime;
+		
+		_aliveEnemyCount.Value = _spawnedEnemies.Count;
+		_killedEnemyCount.Value = _killedCount;
 	}
 
 	private void GenerateEnemy(float deltaTime)
@@ -158,6 +104,7 @@ public class GameMode
 			{
 				Enemy enemy = _enemySpawner.Spawn(_levelConfig.EnemyConfig, GetRandomSpawnPoint());
 				_spawnedEnemies.Add(enemy);
+				_aliveEnemyCount.Value = _spawnedEnemies.Count;
 
 				enemy.Destroyed += OnEnemyDestroyed;
 			}
@@ -173,12 +120,24 @@ public class GameMode
 		return spawnPoint;
 	}
 
+	private void ProcessDefeat()
+	{
+		ProcessEndGame();
+		Defeat?.Invoke();
+	}
+
+	private void ProcessWin()
+	{
+		ProcessEndGame();
+		Win?.Invoke();
+	}
+
 	private void ProcessEndGame()
 	{
 		_isRunning = false;
 
-		_ruleWinService.IsDone -= OnWinConditionCompleted;
-		_ruleDefeatService.IsDone -= OnDefeatConditionCompleted;
+		_ruleWinService.IsCompleted -= OnWinConditionCompleted;
+		_ruleDefeatService.IsCompleted -= OnDefeatConditionCompleted;
 
 		for (int i = 0; i < _spawnedEnemies.Count; i++)
 		{
@@ -194,20 +153,6 @@ public class GameMode
 
 		_bullets.Clear();
 
-		_character.Killed -= OnMainHeroKilled;
-		_character.Destroyed -= OnMainHeroDestroyed;
 		_character.Destroy();
-	}
-
-	private void ProcessDefeat()
-	{
-		ProcessEndGame();
-		Defeat?.Invoke();
-	}
-
-	private void ProcessWin()
-	{
-		ProcessEndGame();
-		Win?.Invoke();
 	}
 }
