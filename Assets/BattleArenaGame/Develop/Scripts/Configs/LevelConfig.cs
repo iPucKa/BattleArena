@@ -4,8 +4,8 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Configs/Gameplay/LevelConfig", fileName = "LevelConfig")]
 public class LevelConfig : ScriptableObject
 {
-	[field: SerializeField] public GameSettings WinRule { get; private set; }
-	[field: SerializeField] public GameSettings DefeatRule { get; private set; }
+	[field: SerializeField] public GameRules WinRule { get; private set; }
+	[field: SerializeField] public GameRules DefeatRule { get; private set; }
 	[field: SerializeField] public EnemyConfig EnemyConfig { get; private set; }
 	[field: SerializeField] public int EnemiesCount { get; private set; }
 	[field: SerializeField] public float CooldownSpawnTime { get; private set; }

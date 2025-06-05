@@ -1,34 +1,28 @@
 using System;
 
-public class MaxSpawnedEnemiesRule : ISettable, IDisposable
+public class MaxSpawnedEnemiesRule : ICondition, IDisposable
 {
 	public event Action IsDone;
 
 	private const int AliveEnemiesCountToDefeat = 10;
 
-	private IReadOnlyVariable<int> _aliveEnemyCount;
+	private IReadOnlyVariable<int> _currentCount;
 
-	private GameRules _rule;
-
-	public MaxSpawnedEnemiesRule(IReadOnlyVariable<int> aliveEnemyCount)
+	public MaxSpawnedEnemiesRule(IReadOnlyVariable<int> currentCount)
 	{
-		_rule = GameRules.HeroIsDead;
-
-		_aliveEnemyCount = aliveEnemyCount;
-		_aliveEnemyCount.ValueChanged += OnValueChanged;
+		_currentCount = currentCount;
+		_currentCount.ValueChanged += OnValueChanged;
 	}
 
-	public GameRules Type => _rule;
-
-	private void OnValueChanged(int newCount)
+	private void OnValueChanged(int value)
 	{
-		if (_aliveEnemyCount.Value >= AliveEnemiesCountToDefeat)
+		if (_currentCount.Value >= AliveEnemiesCountToDefeat)
 			IsDone?.Invoke();
 	}
 
 	public void Dispose()
 	{
-		_aliveEnemyCount.ValueChanged -= OnValueChanged;
+		_currentCount.ValueChanged -= OnValueChanged;
 	}
 
 	public void UpdateLogic(float deltaTime)

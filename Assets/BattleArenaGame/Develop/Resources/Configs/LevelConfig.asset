@@ -12,10 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 67cf86f926aeb874ead5c2eb8a2d2e5d, type: 3}
   m_Name: LevelConfig
   m_EditorClassIdentifier: 
-  <WinRule>k__BackingField:
-    _rule: 0
-  <DefeatRule>k__BackingField:
-    _rule: 3
+  <WinRule>k__BackingField: 0
+  <DefeatRule>k__BackingField: 3
   <EnemyConfig>k__BackingField: {fileID: 11400000, guid: 2d7b6eafefe8f094690cdc3c55b196d2,
     type: 2}
   <EnemiesCount>k__BackingField: 1

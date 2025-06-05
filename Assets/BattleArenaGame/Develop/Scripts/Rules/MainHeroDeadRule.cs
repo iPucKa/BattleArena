@@ -1,18 +1,13 @@
 using System;
 
-public class MainHeroDeadRule : ISettable, IDisposable
+public class MainHeroDeadRule : ICondition, IDisposable
 {
 	public event Action IsDone;
 
     private Character _character;
-	private GameRules _rule;
-
-	public GameRules Type => _rule;
 
 	public MainHeroDeadRule(Character character)
 	{
-		_rule = GameRules.HeroIsDead;
-
 		_character = character;
 		_character.Killed += OnCharacterDead;
 	}

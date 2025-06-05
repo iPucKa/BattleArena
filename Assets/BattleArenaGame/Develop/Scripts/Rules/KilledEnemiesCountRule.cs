@@ -1,34 +1,35 @@
 using System;
 
-public class KilledEnemiesCountRule : ISettable, IDisposable
+public class KilledEnemiesCountRule : ICondition, IDisposable
 {
 	public event Action IsDone;
 	
 	private const int KilledEnemiesCountToWin = 10;
 
-	private IReadOnlyVariable<int> _killedEnemyCount;
+	private IReadOnlyVariable<int> _currentCount;
+	private IReadOnlyVariable<int> _maxCount;
 
-	private GameRules _rule;
-
-	public KilledEnemiesCountRule(IReadOnlyVariable<int> killedEnemyCount)
+	public KilledEnemiesCountRule(IReadOnlyVariable<int> currentCount, IReadOnlyVariable<int> maxCount)
 	{
-		_rule = GameRules.HeroIsDead;
+		_currentCount = currentCount;
+		_maxCount = maxCount;
 
-		_killedEnemyCount = killedEnemyCount;	
-		_killedEnemyCount.ValueChanged += OnValueChanged;
+		_currentCount.ValueChanged += OnValueChanged;
+		_maxCount.ValueChanged += OnValueChanged;
 	}	
 
-	public GameRules Type => _rule;
+	//public GameRules Type => _rule;
 
 	private void OnValueChanged(int newCount)
 	{
-		if(_killedEnemyCount.Value >= KilledEnemiesCountToWin)
+		if(_maxCount.Value -_currentCount.Value >= KilledEnemiesCountToWin)
 			IsDone?.Invoke();
 	}
 
 	public void Dispose()
 	{
-		_killedEnemyCount.ValueChanged -= OnValueChanged;
+		_currentCount.ValueChanged -= OnValueChanged;
+		_maxCount.ValueChanged -= OnValueChanged;
 	}
 
 	public void UpdateLogic(float deltaTime)

@@ -1,10 +1,8 @@
 using System;
 
-public interface ISettable
+public interface ICondition
 {
 	event Action IsDone;
-
-	GameRules Type { get; }
 
 	void UpdateLogic(float deltaTime);
 }

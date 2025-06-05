@@ -1,6 +1,6 @@
 using System;
 
-public class MaxLifeTimeRule : ISettable, IDisposable
+public class MaxLifeTimeRule : ICondition, IDisposable
 {
 	public event Action IsDone;
 
@@ -10,16 +10,12 @@ public class MaxLifeTimeRule : ISettable, IDisposable
 	private float _currentTime;
 	private bool _isCharacterDead;
 
-	private GameRules _rule;
-
 	public MaxLifeTimeRule(Character character)
 	{
 		_character = character;
 
 		_character.Killed += OnCharacterDead;
-	}	
-
-	public GameRules Type => _rule;
+	}
 
 	public void Dispose()
 	{

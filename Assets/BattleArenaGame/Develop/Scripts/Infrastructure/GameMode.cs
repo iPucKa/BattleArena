@@ -11,38 +11,36 @@ public class GameMode
 	private Character _character;
 	private EnemySpawner _enemySpawner;
 
-	private WinRuleService _ruleWinService;
-	private DefeatRuleService _ruleDefeatService;
+	private MyCollection<Enemy> _enemies;
+	private MyCollection<Bullet> _bullets = new();
 
-	private ItemList<Enemy> _spawnedEnemies = new();
-	private ItemList<Bullet> _bullets = new();
-
-	private ReactiveVariable<int> _aliveEnemyCount;
-	private ReactiveVariable<int> _killedEnemyCount;
+	private ICondition _winCondition;
+	private ICondition _defeatCondition;
 
 	private bool _isRunning;
 	private float _time;
-	private int _killedCount;	
 
 	public GameMode(
 		LevelConfig levelConfig,
 		Character character,
-		EnemySpawner enemySpawner)
+		EnemySpawner enemySpawner,
+		ICondition winCondition,
+		ICondition defeatCondition,
+		MyCollection<Enemy> enemies)
 	{
 		_levelConfig = levelConfig;
 		_character = character;
 		_enemySpawner = enemySpawner;
-
-		_aliveEnemyCount = new ReactiveVariable<int>();
-		_killedEnemyCount = new ReactiveVariable<int>();		
+		_winCondition = winCondition;
+		_defeatCondition = defeatCondition;
+		_enemies = enemies;	
 	}
-
-	public IReadOnlyVariable<int> SpawnedEnemyCount => _aliveEnemyCount;
-
-	public IReadOnlyVariable<int> KilledEnemyCount => _killedEnemyCount;	
 
 	public void Start()
 	{
+		_winCondition.IsDone += OnWinConditionCompleted;
+		_defeatCondition.IsDone += OnDefeatConditionCompleted;
+
 		GenerateEnemy(_levelConfig.CooldownSpawnTime);
 
 		_isRunning = true;
@@ -53,10 +51,10 @@ public class GameMode
 		if (_isRunning == false)
 			return;
 
-		GenerateEnemy(deltaTime);		
+		GenerateEnemy(deltaTime);
 
-		_ruleWinService.Update(Time.deltaTime);
-		_ruleDefeatService.Update(Time.deltaTime);
+		_winCondition.UpdateLogic(Time.deltaTime);
+		_defeatCondition.UpdateLogic(Time.deltaTime);
 
 		if (Input.GetKeyDown(KeyCode.Space))
 		{
@@ -64,16 +62,7 @@ public class GameMode
 
 			_bullets.Add(bullet);
 		}
-	}
-
-	public void SetRule(WinRuleService winService, DefeatRuleService defeatService)
-	{
-		_ruleWinService = winService;
-		_ruleDefeatService = defeatService;
-
-		_ruleWinService.IsCompleted += OnWinConditionCompleted;
-		_ruleDefeatService.IsCompleted += OnDefeatConditionCompleted;
-	}
+	}	
 
 	private void OnDefeatConditionCompleted()
 	{
@@ -87,11 +76,7 @@ public class GameMode
 
 	private void OnEnemyDestroyed(MonoDestroyable enemy)
 	{
-		_killedCount++;
-		_spawnedEnemies.Remove(enemy as Enemy);
-		
-		_aliveEnemyCount.Value = _spawnedEnemies.Count;
-		_killedEnemyCount.Value = _killedCount;
+		_enemies.Remove(enemy as Enemy);
 	}
 
 	private void GenerateEnemy(float deltaTime)
@@ -103,8 +88,7 @@ public class GameMode
 			for (int i = 0; i < _levelConfig.EnemiesCount; i++)
 			{
 				Enemy enemy = _enemySpawner.Spawn(_levelConfig.EnemyConfig, GetRandomSpawnPoint());
-				_spawnedEnemies.Add(enemy);
-				_aliveEnemyCount.Value = _spawnedEnemies.Count;
+				_enemies.Add(enemy);
 
 				enemy.Destroyed += OnEnemyDestroyed;
 			}
@@ -136,17 +120,16 @@ public class GameMode
 	{
 		_isRunning = false;
 
-		_ruleWinService.IsCompleted -= OnWinConditionCompleted;
-		_ruleDefeatService.IsCompleted -= OnDefeatConditionCompleted;
+		_winCondition.IsDone -= OnWinConditionCompleted;
+		_defeatCondition.IsDone -= OnDefeatConditionCompleted;
 
-		for (int i = 0; i < _spawnedEnemies.Count; i++)
+		for (int i = 0; i < _enemies.Count; i++)
 		{
-			_spawnedEnemies.GetBy(i).Destroyed -= OnEnemyDestroyed;
-			_spawnedEnemies.GetBy(i).Destroy();
+			_enemies.GetBy(i).Destroyed -= OnEnemyDestroyed;
+			_enemies.GetBy(i).Destroy();
 		}
 
-		_spawnedEnemies.Clear();
-
+		_enemies.Clear();
 
 		for (int i = 0; i < _bullets.Count; i++)
 			_bullets.GetBy(i).Destroy();

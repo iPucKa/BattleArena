@@ -7,7 +7,7 @@ public class Bootstrap : MonoBehaviour
 
 	private ControllersUpdateService _controllersUpdateService;
 
-	private GameplayCircle _gameplayCircle;
+	private GameplayCycle _gameplayCycle;
 
 	private void Awake()
 	{
@@ -30,7 +30,7 @@ public class Bootstrap : MonoBehaviour
 
 		EnemySpawner enemiesSpawner = new EnemySpawner(enemiesFactory);		
 
-		_gameplayCircle = new GameplayCircle(
+		_gameplayCycle = new GameplayCycle(
 			mainHeroFactory,
 			heroConfig,
 			levelConfig,
@@ -48,24 +48,24 @@ public class Bootstrap : MonoBehaviour
 		yield return new WaitForSeconds(1.5f);
 
 		//подготовка сцены
-		yield return _gameplayCircle.PrepareScene();		
+		yield return _gameplayCycle.PrepareScene();		
 
 		//_loadingScreen.Hide();
 
 		//старт игры
 
-		yield return _gameplayCircle.Launch();
+		yield return _gameplayCycle.Launch();
 	}
 
 	private void OnDestroy()
 	{
-		_gameplayCircle?.Dispose();
+		_gameplayCycle?.Dispose();
 	}
 
 	private void Update()
 	{
 		_controllersUpdateService?.Update(Time.deltaTime);
 
-		_gameplayCircle?.Update(Time.deltaTime);
+		_gameplayCycle?.Update(Time.deltaTime);
 	}
 }
